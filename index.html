@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор зарплаты СФУ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .load-ranges {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .load-btn {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            color: #333;
+        }
+
+        .load-btn:hover {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .load-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-calculate {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-calculate:hover {
+            background: #5568d3;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-reset {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #d0d0d0;
+        }
+
+        .result {
+            display: none;
+            background: #f5f7ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .result-row.total {
+            border-top: 2px solid #667eea;
+            padding-top: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #667eea;
+        }
+
+        .result-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .load-ranges {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧮 Калькулятор зарплаты</h1>
+            <p>СФУ, Краснояск</p>
+        </div>
+
+        <form id="salaryForm">
+            <div class="form-group">
+                <label for="position">Должность</label>
+                <select id="position" required>
+                    <option value="">Выберите должность...</option>
+                    <option value="💼 Ассистент">💼 Ассистент</option>
+                    <option value="👨‍🏫 Старший преподаватель">👨‍🏫 Старший преподаватель</option>
+                    <option value="👨‍🎓 Доцент">👨‍🎓 Доцент</option>
+                    <option value="🎓 Профессор">🎓 Профессор</option>
+                    <option value="🏛️ Зав. кафедрой">🏛️ Зав. кафедрой</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="degree">Учёная степень</label>
+                <select id="degree" required>
+                    <option value="">Выберите степень...</option>
+                    <option value="❌ Нет">❌ Нет</option>
+                    <option value="📜 Кандидат наук">📜 Кандидат наук</option>
+                    <option value="🏆 Доктор наук">🏆 Доктор наук</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="rank">Учёное звание</label>
+                <select id="rank" required>
+                    <option value="">Выберите звание...</option>
+                    <option value="❌ Нет">❌ Нет</option>
+                    <option value="👑 Профессор">👑 Профессор</option>
+                    <option value="📚 Доцент">📚 Доцент</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="rate">Ставка</label>
+                <select id="rate" required>
+                    <option value="">Выберите ставку...</option>
+                    <option value="1.0">100% (1.0)</option>
+                    <option value="0.75">75% (0.75)</option>
+                    <option value="0.5">50% (0.5)</option>
+                    <option value="0.25">25% (0.25)</option>
+                    <option value="0.1">10% (0.1)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Нагрузка (часы)</label>
+                <div class="load-ranges" id="loadRanges">
+                    <p style="grid-column: 1 / -1; color: #999; font-size: 12px;">Выберите ставку сначала...</p>
+                </div>
+                <input type="hidden" id="loadHours" value="">
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-calculate" onclick="calculateSalary()">Рассчитать</button>
+                <button type="reset" class="btn-reset">Очистить</button>
+            </div>
+        </form>
+
+        <div class="result" id="result">
+            <div class="result-title">✅ Расчёт готов</div>
+            <div class="result-row">
+                <span>Оклад:</span>
+                <span class="result-value" id="resultOklad">0</span>
+            </div>
+            <div class="result-row">
+                <span>Доплата:</span>
+                <span class="result-value" id="resultDoplata">0</span>
+            </div>
+            <div class="result-row">
+                <span>Р.К. и С.Н.:</span>
+                <span class="result-value" id="resultRkSn">0</span>
+            </div>
+            <div class="result-row total">
+                <span>ИТОГО:</span>
+                <span class="result-value" id="resultTotal">0</span>
+            </div>
+        </div>
+
+        <div class="error" id="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        const loadRanges = {
+            1.0: [
+                { label: "≤900", value: 900 },
+                { label: "901–990", value: 990 },
+                { label: "991–1080", value: 1080 },
+                { label: "1081–1170", value: 1170 },
+                { label: "1171–1260", value: 1260 },
+                { label: "1261–1350", value: 1350 }
+            ],
+            0.75: [
+                { label: "≤675", value: 675 },
+                { label: "676–720", value: 720 },
+                { label: "721–810", value: 810 },
+                { label: "811–900", value: 900 },
+                { label: "901–990", value: 990 },
+                { label: "991–1080", value: 1080 },
+                { label: "1081–1170", value: 1170 },
+                { label: "1171–1260", value: 1260 },
+                { label: "1261–1350", value: 1350 }
+            ],
+            0.5: [
+                { label: "≤450", value: 450 },
+                { label: "451–540", value: 540 },
+                { label: "541–630", value: 630 },
+                { label: "631–720", value: 720 },
+                { label: "721–810", value: 810 },
+                { label: "811–900", value: 900 },
+                { label: "901–990", value: 990 },
+                { label: "991–1080", value: 1080 },
+                { label: "1081–1170", value: 1170 },
+                { label: "1171–1260", value: 1260 },
+                { label: "1261–1350", value: 1350 }
+            ],
+            0.25: [
+                { label: "≤225", value: 225 },
+                { label: "226–270", value: 270 },
+                { label: "271–360", value: 360 },
+                { label: "361–450", value: 450 },
+                { label: "451–540", value: 540 },
+                { label: "541–630", value: 630 },
+                { label: "631–720", value: 720 },
+                { label: "721–810", value: 810 },
+                { label: "811–900", value: 900 },
+                { label: "901–990", value: 990 },
+                { label: "991–1080", value: 1080 },
+                { label: "1081–1170", value: 1170 },
+                { label: "1171–1260", value: 1260 },
+                { label: "1261–1350", value: 1350 }
+            ],
+            0.1: [
+                { label: "≤90", value: 90 },
+                { label: "91–180", value: 180 },
+                { label: "181–270", value: 270 },
+                { label: "271–360", value: 360 },
+                { label: "361–450", value: 450 },
+                { label: "451–540", value: 540 },
+                { label: "541–630", value: 630 },
+                { label: "631–720", value: 720 },
+                { label: "721–810", value: 810 },
+                { label: "811–900", value: 900 },
+                { label: "901–990", value: 990 },
+                { label: "991–1080", value: 1080 },
+                { label: "1081–1170", value: 1170 },
+                { label: "1171–1260", value: 1260 },
+                { label: "1261–1350", value: 1350 }
+            ]
+        };
+
+        document.getElementById('rate').addEventListener('change', function() {
+            const rate = this.value;
+            const container = document.getElementById('loadRanges');
+            const ranges = loadRanges[rate] || [];
+
+            container.innerHTML = '';
+            ranges.forEach(range => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'load-btn';
+                btn.textContent = range.label;
+                btn.onclick = () => selectLoad(btn, range.value);
+                container.appendChild(btn);
+            });
+        });
+
+        function selectLoad(btn, value) {
+            document.querySelectorAll('.load-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('loadHours').value = value;
+        }
+
+        function formatCurrency(num) {
+            return num.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' руб.';
+        }
+
+        async function calculateSalary() {
+            const position = document.getElementById('position').value;
+            const degree = document.getElementById('degree').value;
+            const rank = document.getElementById('rank').value;
+            const rate = document.getElementById('rate').value;
+            const loadHours = document.getElementById('loadHours').value;
+            const errorDiv = document.getElementById('error');
+
+            if (!position || !degree || !rank || !rate || !loadHours) {
+                errorDiv.textContent = '⚠️ Пожалуйста, выберите все параметры';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        position, degree, rank, rate, load_hours: parseInt(loadHours)
+                    })
+                });
+
+                const data = await response.json();
+
+                document.getElementById('resultOklad').textContent = formatCurrency(data.oklad);
+                document.getElementById('resultDoplata').textContent = formatCurrency(data.doplata);
+                document.getElementById('resultRkSn').textContent = formatCurrency(data.rk_sn);
+                document.getElementById('resultTotal').textContent = formatCurrency(data.total);
+
+                document.getElementById('result').classList.add('show');
+            } catch (error) {
+                errorDiv.textContent = '❌ Ошибка расчёта. Проверьте соединение с сервером.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        document.getElementById('salaryForm').addEventListener('reset', function() {
+            document.getElementById('loadRanges').innerHTML = '<p style="grid-column: 1 / -1; color: #999; font-size: 12px;">Выберите ставку сначала...</p>';
+            document.getElementById('loadHours').value = '';
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
