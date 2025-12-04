@@ -1,9 +1,7 @@
-from flask import Flask, request, jsonify
-import os
+from flask import Flask, render_template, request, jsonify
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 
-# Таблица окладов (как в боте)
 salary_table = {
     ("ассистент", "нет", "нет"): 31150,
     ("ассистент", "кандидат наук", "нет"): 35080,
@@ -72,6 +70,7 @@ def get_coefficient(rate: float, load_hours: int, position: str) -> float:
     else:
         ranges = other_ranges_by_rate.get(rate, other_ranges_by_rate[0.1])
         coeffs = other_coeffs_by_rate.get(rate, other_coeffs_by_rate[0.1])
+    
     for idx, (start, end) in enumerate(ranges):
         if start <= load_hours <= end:
             return coeffs[idx] if idx < len(coeffs) else coeffs[-1]
@@ -79,7 +78,7 @@ def get_coefficient(rate: float, load_hours: int, position: str) -> float:
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    return render_template('index.html')
 
 @app.route('/api/calculate', methods=['POST'])
 def calculate():
@@ -90,7 +89,6 @@ def calculate():
     rate = float(data.get('rate', 1.0))
     load_hours = int(data.get('load_hours', 0))
     
-    # Преобразуем в ключи таблицы
     pos_key = "ассистент" if "Ассистент" in position else \
               "старший преподаватель" if "Старший" in position else \
               "доцент" if "Доцент" in position else \
@@ -123,4 +121,4 @@ def calculate():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
